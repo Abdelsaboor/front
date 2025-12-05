@@ -1,22 +1,52 @@
+/**
+ * Main Application Component
+ *
+ * Orchestrates the entire 3D experience:
+ * - WebGL capability detection
+ * - Scene rendering with Three.js
+ * - Scroll-driven camera animation
+ * - UI overlay (nav, content, footer)
+ *
+ * Architecture:
+ * - Separates 3D rendering from UI
+ * - Uses professional controller pattern
+ * - Handles fallbacks gracefully
+ */
+
 import { useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { PerspectiveCamera, Environment } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
-import { GloveModel } from './components/GloveModel';
-import { Navbar } from './components/Navbar';
-import { Footer } from './components/Footer';
-import { useScrollAnimation } from './hooks/useScrollAnimation';
-import { useResponsive } from './hooks/useResponsive';
-import { COLORS } from './utils/colors';
 import * as THREE from 'three';
+
+// Components
+import { GloveModel } from '@3d/models/GloveModel';
+import { Navbar } from '@components/Navbar';
+import { Footer } from '@components/Footer';
+
+// Controllers & Systems
+import { useCameraController } from '@3d/controllers/CameraController';
+import { LIGHTING_SETUP } from '@3d/systems/Lights';
+
+// Hooks
+import { useResponsive } from '@hooks/useResponsive';
+
+// Styles
 import './index.css';
 
+/**
+ * 3D Scene Component
+ *
+ * Renders the Three.js scene with lighting, model, and effects.
+ * Separated from App for clean architecture.
+ */
 function Scene() {
   const { camera } = useThree();
   const [currentScene, setCurrentScene] = useState(1);
   const [scrollProgress, setScrollProgress] = useState(0);
 
-  useScrollAnimation({
+  // Use professional camera controller
+  useCameraController({
     camera: camera as THREE.PerspectiveCamera,
     onSceneChange: (scene) => {
       setCurrentScene(scene);
@@ -26,49 +56,60 @@ function Scene() {
 
   return (
     <>
-      {/* Lighting Setup - Cinematic Three-Point Lighting */}
-      <ambientLight intensity={0.2} />
-
-      {/* Key Light */}
-      <directionalLight
-        position={[5, 5, 5]}
-        intensity={1.5}
-        color={COLORS.keyLight}
-        castShadow
-      />
-
-      {/* Fill Light */}
-      <directionalLight
-        position={[-3, 2, -2]}
-        intensity={0.5}
-        color={COLORS.fillLight}
-      />
-
-      {/* Rim Light */}
-      <directionalLight
-        position={[0, 3, -5]}
-        intensity={0.8}
-        color={COLORS.rimLight}
-      />
+      {/* Lighting from centralized configuration */}
+      {LIGHTING_SETUP.map((light, index) => {
+        if (light.type === 'ambient') {
+          return <ambientLight key={index} intensity={light.intensity} color={light.color} />;
+        }
+        if (light.type === 'directional') {
+          return (
+            <directionalLight
+              key={index}
+              position={light.position as [number, number, number]}
+              intensity={light.intensity}
+              color={light.color}
+              castShadow={light.castShadow}
+              shadow-mapSize-width={light.shadowConfig?.mapSize[0]}
+              shadow-mapSize-height={light.shadowConfig?.mapSize[1]}
+              shadow-camera-far={light.shadowConfig?.camera.far}
+              shadow-camera-left={light.shadowConfig?.camera.left}
+              shadow-camera-right={light.shadowConfig?.camera.right}
+              shadow-camera-top={light.shadowConfig?.camera.top}
+              shadow-camera-bottom={light.shadowConfig?.camera.bottom}
+              shadow-bias={light.shadowConfig?.bias}
+            />
+          );
+        }
+        if (light.type === 'point') {
+          return (
+            <pointLight
+              key={index}
+              position={light.position as [number, number, number]}
+              intensity={light.intensity}
+              color={light.color}
+            />
+          );
+        }
+        return null;
+      })}
 
       {/* 3D Glove Model */}
       <GloveModel scrollProgress={scrollProgress} scene={currentScene} />
 
-      {/* Environment for reflections */}
-      <Environment preset="city" />
+      {/* Environment for subtle reflections */}
+      <Environment preset="city" environmentIntensity={0.3} />
 
-      {/* Post-processing for glows */}
+      {/* Post-processing effects */}
       <EffectComposer>
-        <Bloom
-          intensity={0.5}
-          luminanceThreshold={0.9}
-          luminanceSmoothing={0.9}
-        />
+        <Bloom intensity={0.4} luminanceThreshold={0.92} luminanceSmoothing={0.95} mipmapBlur />
       </EffectComposer>
     </>
   );
 }
 
+/**
+ * Main App Component
+ */
 function App() {
   const { isMobile } = useResponsive();
 
@@ -79,11 +120,7 @@ function App() {
 
       {/* Fixed 3D Canvas */}
       <div className="canvas-container">
-        <Canvas
-          shadows
-          dpr={isMobile ? [1, 1.5] : [1, 2]}
-          performance={{ min: 0.5 }}
-        >
+        <Canvas shadows dpr={isMobile ? [1, 1.5] : [1, 2]} performance={{ min: 0.5 }}>
           <PerspectiveCamera makeDefault position={[0, 0, 5]} fov={50} />
           <Scene />
         </Canvas>
@@ -104,12 +141,8 @@ function App() {
           <div className="text-overlay">
             <h2>From Gesture to Voice</h2>
             <p>Advanced sensors capture every movement</p>
-            <p style={{ marginTop: '2rem', opacity: 0.7 }}>
-              AI processes signals in real-time
-            </p>
-            <p style={{ marginTop: '2rem', opacity: 0.7 }}>
-              Natural speech output
-            </p>
+            <p style={{ marginTop: '2rem', opacity: 0.7 }}>AI processes signals in real-time</p>
+            <p style={{ marginTop: '2rem', opacity: 0.7 }}>Natural speech output</p>
           </div>
         </section>
 
@@ -134,9 +167,7 @@ function App() {
         <section id="contact" className="scene-section" style={{ height: '100vh' }}>
           <div className="text-overlay">
             <h2>Voice of Silence</h2>
-            <p style={{ marginTop: '2rem' }}>
-              Join the revolution in accessible communication
-            </p>
+            <p style={{ marginTop: '2rem' }}>Join the revolution in accessible communication</p>
             <button className="cta-button" style={{ marginTop: '2rem' }}>
               Get Started
             </button>

@@ -3,11 +3,11 @@
 
 :root {
   /* Color System */
-  --bg-primary: #F7FFF7;
-  --text-primary: #1A535C;
-  --accent: #4ECDC4;
-  --highlight: #FFE66D;
-  --alert: #FF6B6B;
+  --bg-primary: #f7fff7;
+  --text-primary: #1a535c;
+  --accent: #4ecdc4;
+  --highlight: #ffe66d;
+  --alert: #ff6b6b;
 
   /* Typography */
   --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -87,7 +87,7 @@ p {
   pointer-events: none;
 }
 
-.content-overlay>* {
+.content-overlay > * {
   pointer-events: auto;
 }
 
@@ -151,7 +151,7 @@ p {
 }
 /* Footer Styles */
 .footer {
-  background: linear-gradient(135deg, #1A535C 0%, #0d2a2e 100%);
+  background: linear-gradient(135deg, #1a535c 0%, #0d2a2e 100%);
   color: white;
   padding: 4rem 2rem 2rem;
   position: relative;

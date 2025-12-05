@@ -6,7 +6,7 @@ export const COLORS = {
   accent: new Color('#4ECDC4'),
   highlight: new Color('#FFE66D'),
   alert: new Color('#FF6B6B'),
-  
+
   // Additional colors for 3D scenes
   keyLight: new Color('#ffffff'),
   fillLight: new Color('#b8d4e0'),
